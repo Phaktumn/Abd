@@ -2,10 +2,6 @@ package com.company;
 
 import com.company.DataBase.Client;
 import com.company.DataBase.Product;
-import com.company.Exception.DatabaseCriticalZoneException;
-
-import java.io.IOException;
-import java.sql.SQLException;
 
 public class Main {
 
@@ -22,10 +18,10 @@ public class Main {
 
         try {
             client.Sell(1, 3, product);
-            //conn.Commit();
+            conn.Commit();
         } catch (Exception e) {
             e.printStackTrace();
-            //conn.connection.rollback();
+            conn.connection.rollback();
         }
 
         conn.CloseConnection();

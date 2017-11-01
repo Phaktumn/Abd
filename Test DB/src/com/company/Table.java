@@ -14,7 +14,8 @@ public class Table {
 
     protected int Size;
     public int getSize() throws Exception {
-        SendQuery("select count(*) from " + name);
+        PreparedStatement ps = connection.GetConnection().prepareStatement("select count(*) from " + name);
+        SendQuery(ps);
         connection.Commit();
         return Size;
     }
@@ -36,48 +37,39 @@ public class Table {
     * all information is lost
     * */
     public void ClearTable() throws Exception {
-        SendQuery(String.format("delete from %s;", name));
+        PreparedStatement ps = connection.GetConnection()
+                .prepareStatement(String.format("delete from %s;", name));
+        SendQuery(ps);
         connection.Commit();
         Size = 0;
     }
 
-    public void Populate(int entries, Boolean clearBeforePopulate) throws Exception { }
+    public void Populate(int entries, Boolean clearBeforePopulate) throws Exception {
+        connection.Commit();
+    }
 
-    public void Insert(Object... args) throws Exception {
+    public PreparedStatement PrepareInsertStatement(int argsCount) throws SQLException {
         StringBuilder queryBuilder = new StringBuilder();
         String query = String.format("insert into %s values(", name);
         queryBuilder.append(query);
 
-        Arrays.stream(args).map(o -> "?,").forEach(queryBuilder::append);
+        for (int i = 0; i < argsCount; i++) {
+            queryBuilder.append("?,");
+        }
 
         queryBuilder.deleteCharAt(queryBuilder.lastIndexOf(","));
         queryBuilder.append(");");
-
-        SendQuery(queryBuilder.toString(), args);
+        return connection.GetConnection().prepareStatement(queryBuilder.toString());
     }
 
     /**
-     * @param query SQL query to send using {?} to format
      * @param args Arguments to substitute {?}
      * @return ResultSet if the Query returns a valid value else returns NULL
      * @throws Exception
      */
-    public ResultSet SendQuery(String query, Object... args) throws Exception {
-
-        //match args count with the number of ? in the query
-        int counter = 0;
-        for (char c : query.trim().toCharArray()){
-            if(c == '?'){
-                counter++;
-            }
-        }
-        if(counter != args.length)
-            throw new Exception("The number of arguments does not mach the number of {?} in the query");
-
-        if(!query.endsWith(";"))
-            query += ";";
+    public ResultSet SendQuery(PreparedStatement preparedStatement, Object... args) throws Exception {
         counter = 1;
-        PreparedStatement ps = connection.GetConnection().prepareStatement(query);
+        PreparedStatement ps = preparedStatement;
         for (Object o : args){
             PreparedStatementExtension.Set(ps, counter, o);
             counter++;
@@ -89,18 +81,27 @@ public class Table {
         catch (Exception e) {
             try {
                 ps.executeUpdate();
-                ps.close();
             }
             catch (SQLException ex) {
                 ex.printStackTrace();
             }
         }
-        connection.Commit();
         return resultSet;
     }
 
-    public void UpdateField(String IDColumnName, String[] columnNames, Object... args) throws Exception {
-        //update product set stock = ? where id = ?;
+    /** This method requires you to call {@code executeBatch} */
+    public PreparedStatement SendBatch(PreparedStatement preparedStatement, Object... args) throws Exception{
+        counter = 1;
+        PreparedStatement ps = preparedStatement;
+        for (Object o : args) {
+            PreparedStatementExtension.Set(ps, counter, o);
+            counter++;
+        }
+        ps.addBatch();
+        return ps;
+    }
+
+    public PreparedStatement PrepareUpdateStatement(String IDColumnName, String[] columnNames) throws SQLException {
         String queryPart = String.format("update %s set ", name);
         for (int i = 0; i < columnNames.length; i++) {
             if(i == columnNames.length - 1){
@@ -109,6 +110,6 @@ public class Table {
             else queryPart += (columnNames[i] + "= ?,");
         }
         String query = String.format("%s where %s = ?", queryPart, IDColumnName);
-        SendQuery(query, args);
+        return connection.GetConnection().prepareStatement(query);
     }
 }
