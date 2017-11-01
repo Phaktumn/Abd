@@ -15,9 +15,11 @@ public class CustomTable extends Table
         if(clearBeforePopulate)
             ClearTable(super.name);
         super.counter = 0;
+
+        PreparedStatement ps = connection.GetConnection().prepareStatement("insert into " + super.name + " values (?, ?);");
         while (super.counter < entries)
         {
-            PreparedStatement ps = connection.GetConnection().prepareStatement("insert into " + super.name + " values (?, ?);");
+
             ps.setInt(1, counter);
             ps.setInt(2, new Random().nextInt(entries));
             ps.executeUpdate();
