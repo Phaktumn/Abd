@@ -11,9 +11,9 @@ public class CustomTable extends Table
     }
 
     @Override
-    public void Populate(int entries, Boolean clearBeforePopulate) throws SQLException {
+    public void Populate(int entries, Boolean clearBeforePopulate) throws Exception {
         if(clearBeforePopulate)
-            ClearTable(super.name);
+            ClearTable();
         super.counter = 0;
         while (super.counter < entries)
         {
