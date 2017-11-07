@@ -22,6 +22,7 @@ public class DbConnection {
 
     public void SetAutoCommit() throws SQLException {
         connection.setAutoCommit(!connection.getAutoCommit());
+        System.out.println("Auto Commit set to: " + connection.getAutoCommit());
     }
 
     public void Commit() throws SQLException {

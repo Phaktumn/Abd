@@ -2,6 +2,7 @@ package com.company;
 
 import com.company.DataBase.Client;
 import com.company.DataBase.InvoiceLines;
+import com.company.DataBase.Invoices;
 import com.company.DataBase.Product;
 import org.postgresql.util.PSQLException;
 
@@ -23,7 +24,7 @@ public class Main extends Thread {
         DELIVERY
     }
     static Action action;
-    static final String DATABASE_NAME = "invoices";
+    static final String DATABASE_NAME = "transactions";
     static final int PORT = 5433;
     static final int DB_ENTRIES = 10;
 
@@ -45,13 +46,15 @@ public class Main extends Thread {
         Product product = new Product(conn, "Product");
         Client client = new Client(conn, "Client");
         try {
-            product.Populate(DB_ENTRIES, true);
-            client.Populate(DB_ENTRIES, true);
+            product.Populate(DB_ENTRIES, false);
+            client.Populate(DB_ENTRIES, false);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        InvoiceLines lines = new InvoiceLines(conn, "invoicelines");
+        InvoiceLines lines = new InvoiceLines(conn, "invoiceline");
+        Invoices invoices = new Invoices(conn, "invoice");
+
 
         int counter = 0;
         int iterations = 100;
@@ -62,7 +65,8 @@ public class Main extends Thread {
             try {
                 switch (action){
                     case SELL:
-                        client.Sell(new Random().nextInt(DB_ENTRIES),new Random().nextInt(DB_ENTRIES), product);
+                        client.Sell(new Random().nextInt(200) + 350,
+                                new Random().nextInt(100), product, lines, invoices);
                         break;
                     case LIST_SOLD_ITEMS:
                         break;
@@ -77,7 +81,10 @@ public class Main extends Thread {
                 conn.Commit();
             } catch (PSQLException e) {
                 System.out.println("--Performed a Rollback action--");
-                System.out.println("\tAction -> " + action.name().toLowerCase());
+                System.out.println("\tAction   -> " + action.name().toLowerCase());
+                System.out.println("\tSqlState -> " + e.getSQLState());
+                System.out.println("\tMessage  -> " + e.getMessage());
+                e.printStackTrace();
                 try {
                     conn.connection.rollback();
                 } catch (SQLException e1) {
@@ -99,7 +106,7 @@ public class Main extends Thread {
 
     public static void main(String[] args) throws Exception {
 
-        for (int i = 0; i < 10  ; i++) {
+        for (int i = 0; i < 1  ; i++) {
             new Main().start();
         }
 

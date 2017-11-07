@@ -1,6 +1,7 @@
 package com.company;
 
 import Utils.PreparedStatementExtension;
+import com.company.DataBase.Parameters.TableParameters;
 import javafx.scene.control.Tab;
 import org.postgresql.util.PSQLException;
 
@@ -15,7 +16,10 @@ public class Table {
 
     protected DbConnection connection;
 
+    public TableParameters parameters = new TableParameters();
+
     protected int Size;
+
     public int getSize() throws Exception {
         PreparedStatement ps = connection.GetConnection().prepareStatement("select count(*) from " + name);
         SendQuery(ps);
@@ -51,12 +55,24 @@ public class Table {
         connection.Commit();
     }
 
-    public PreparedStatement PrepareInsertStatement(int argsCount) throws SQLException {
+    public PreparedStatement PrepareInsertStatement() throws SQLException {
         StringBuilder queryBuilder = new StringBuilder();
-        String query = String.format("insert into %s values(", name);
+        String query = String.format("insert into %s(", name);
         queryBuilder.append(query);
 
-        for (int i = 0; i < argsCount; i++) {
+        Object[] arr = parameters.asArray();
+        for (int i = 0; i < arr.length; i++) {
+            if(arr[i] == parameters.getPkName()){
+                continue;
+            }
+            queryBuilder.append(String.format("%s,", (String) arr[i]));
+        }
+
+        queryBuilder.deleteCharAt(queryBuilder.lastIndexOf(","));
+
+        queryBuilder.append(") values(");
+
+        for (int i = 0; i < parameters.Count() - 1; i++) {
             queryBuilder.append("?,");
         }
 
@@ -84,7 +100,7 @@ public class Table {
         return resultSet;
     }
 
-    /** This method requires you to call {@code executeBatch} */
+    /** This method requires you to call {@code executeBatch()} */
     public PreparedStatement SendBatch(PreparedStatement preparedStatement, Object... args) throws Exception{
         counter = 1;
         PreparedStatement ps = preparedStatement;

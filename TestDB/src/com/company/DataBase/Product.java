@@ -13,23 +13,20 @@ public class Product extends Table {
 
     public Product(DbConnection connection, String tableName) {
         super(connection, tableName);
-        parameters = new TableParameters();
-        parameters.Insert("id");
-        parameters.Insert("Description");
-        parameters.Insert("Stock");
-        parameters.Insert("Min");
-        parameters.Insert("Max");
-        parameters.Insert("id");
-    }
 
-    public TableParameters parameters;
+        parameters.Insert("id", true);
+        parameters.Insert("descr");
+        parameters.Insert("stock");
+        parameters.Insert("min");
+        parameters.Insert("max");
+    }
 
     @Override
     public void Populate(int entries, Boolean clearBeforePopulate) throws Exception {
         if(clearBeforePopulate)
             ClearTable();
 
-        PreparedStatement statement = PrepareInsertStatement(5);
+        PreparedStatement statement = PrepareInsertStatement();
         statement.closeOnCompletion();
 
         for (int i = 0; i < entries; i++)
@@ -39,7 +36,7 @@ public class Product extends Table {
             int stock = min + new Random().nextInt(max - min);
 
             try {
-                SendQuery(statement,  "This is a product", stock, min, max);
+                SendQuery(statement, "This is a product", stock, min, max);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -54,7 +51,8 @@ public class Product extends Table {
         PreparedStatement statement = connection.GetConnection().prepareStatement(formatted);
         ResultSet set = SendQuery(statement, productId);
         set.next();
-        return set.getInt(1);
+        int i = set.getInt(1);
+        return i;
     }
 
     public AbstractMap.SimpleEntry<Integer,Integer> GetProductMinMax(int ProductId) throws Exception

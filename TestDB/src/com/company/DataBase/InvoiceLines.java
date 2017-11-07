@@ -10,15 +10,18 @@ public class InvoiceLines extends Table {
 
     public InvoiceLines(DbConnection connection, String tableName) {
         super(connection, tableName);
+        parameters.Insert("id", true);
+        parameters.Insert("invoiceid");
+        parameters.Insert("productid");
     }
 
     public void ListTopNMostSold(Product p, int n) throws Exception
     {
-        String format = String.format("select product.%s,count(invoiceline.productid) as i from invoiceline,product where" +
+        String format = String.format("select product.%s,count(%s) as i from invoiceline,product where" +
                 " product.%s = productid group by product.id order by i desc limit %d;",
-                p.parameters.GetParameter("id"), p.parameters.GetParameter("id"), n);
+                p.parameters.GetParameter("id"), p.parameters.GetParameter("id"), parameters.asArray()[2], n);
         PreparedStatement ps = connection.GetConnection().prepareStatement(format);
-        ResultSet set = SendQuery(ps);
+        //ResultSet set = SendQuery(ps);
         System.out.println("--Listing Top 10--");
         //while (set.next()){
         //    System.out.println(set.getInt(1) + "|" + set.getString(2));

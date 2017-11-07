@@ -1,5 +1,6 @@
 package com.company.DataBase;
 
+import com.company.DataBase.Parameters.TableParameters;
 import com.company.DbConnection;
 import com.company.Table;
 import org.postgresql.util.PSQLException;
@@ -13,14 +14,20 @@ public class Client extends Table {
 
     public Client(DbConnection connection, String tableName) {
         super(connection, tableName);
+
+        parameters = new TableParameters();
+        parameters.Insert("id", true);
+        parameters.Insert("name");
+        parameters.Insert("addrs");
     }
 
     @Override
-    public void Populate(int entries, Boolean clearBeforePopulate) throws Exception {
+    public void Populate(int entries, Boolean clearBeforePopulate) throws Exception
+    {
         if(clearBeforePopulate)
             ClearTable();
 
-        PreparedStatement statement = PrepareInsertStatement(3);
+        PreparedStatement statement = PrepareInsertStatement();
 
         for (int i = 0; i < entries; i++) {
             int name = new Random().nextInt(100000);
@@ -29,7 +36,7 @@ public class Client extends Table {
             String location = "Portugal";
             try {
                 //SendBatch(statement, i, personName, location);
-                SendQuery(statement,personName,location);
+                SendQuery(statement, personName,location);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -39,7 +46,7 @@ public class Client extends Table {
         /* Populate(entries - 1, clearBeforePopulate); */
     }
 
-    public void Sell(int clientId,  int productId, Product p) throws Exception {
+    public void Sell(int clientId,  int productId, Product p, InvoiceLines lines, Invoices invoices) throws Exception {
         int id = new Random().nextInt(10000);
         int invoiceLines = 5 + new Random().nextInt(15);
 
@@ -49,14 +56,13 @@ public class Client extends Table {
             throw new PSQLException("Low Stock", PSQLState.NUMERIC_CONSTANT_OUT_OF_RANGE);
         }
 
-        PreparedStatement statement = connection.GetConnection()
-                .prepareStatement("insert into invoice values(?,?);");
+        PreparedStatement statement = invoices.PrepareInsertStatement();
         SendQuery(statement, clientId);
         //statement.executeBatch();
 
-        statement = connection.GetConnection().prepareStatement("insert into invoiceline values(?,?,?);");
+        statement = lines.PrepareInsertStatement();
         for (int i = 0; i < invoiceLines; i++){
-            SendQuery(statement, i,id,productId);
+            SendQuery(statement, new Random().nextInt(10000) + 100, id, productId);
         }
 
         p.SendQuery(p.PrepareUpdateStatement(p.parameters.GetParameter("id"),
