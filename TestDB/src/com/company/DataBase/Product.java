@@ -1,11 +1,11 @@
 package com.company.DataBase;
 
+import com.company.DataBase.Parameters.TableParameters;
 import com.company.DbConnection;
 import com.company.Table;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.Random;
 
@@ -13,13 +13,16 @@ public class Product extends Table {
 
     public Product(DbConnection connection, String tableName) {
         super(connection, tableName);
+        parameters = new TableParameters();
+        parameters.Insert("id");
+        parameters.Insert("Description");
+        parameters.Insert("Stock");
+        parameters.Insert("Min");
+        parameters.Insert("Max");
+        parameters.Insert("id");
     }
 
-    final String Id = "Id";
-    final String Desc = "Description";
-    final String Stock = "Stock";
-    final String Min = "Min";
-    final String Max = "Max";
+    public TableParameters parameters;
 
     @Override
     public void Populate(int entries, Boolean clearBeforePopulate) throws Exception {
@@ -46,7 +49,8 @@ public class Product extends Table {
     }
 
     public int GetProductStock(int productId) throws Exception {
-        String formatted = String.format("select %s from %s where %s = ?", Stock, name,  Id);
+        String formatted = String.format("select %s from %s where %s = ?", parameters.GetParameter("stock"),
+                name,  parameters.GetParameter("id"));
         PreparedStatement statement = connection.GetConnection().prepareStatement(formatted);
         ResultSet set = SendQuery(statement, productId);
         set.next();
@@ -56,7 +60,9 @@ public class Product extends Table {
     public AbstractMap.SimpleEntry<Integer,Integer> GetProductMinMax(int ProductId) throws Exception
     {
         PreparedStatement ps = connection.GetConnection()
-                .prepareStatement(String.format("select %s,%s from %s where %s = ?",Min, Max, name, Id));
+                .prepareStatement(String.format("select %s,%s from %s where %s = ?",
+                        parameters.GetParameter("min"), parameters.GetParameter("max"),
+                        name, parameters.GetParameter("id")));
         ResultSet set = SendQuery(ps, ProductId);
         int x, y;
         set.first();

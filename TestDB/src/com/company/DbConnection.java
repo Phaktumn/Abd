@@ -1,5 +1,6 @@
 package com.company;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -31,10 +32,7 @@ public class DbConnection {
 
     public void PrintClientInfo() throws SQLException {
         Properties properties = connection.getClientInfo();
-        while (properties.propertyNames().hasMoreElements()){
-            String element = (String) properties.propertyNames().nextElement();
-            System.out.println(element + " : " + properties.getProperty(element));
-        }
+        properties.list(System.out);
     }
 
     public void CloseConnection() throws SQLException {

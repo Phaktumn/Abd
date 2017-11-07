@@ -78,7 +78,7 @@ public class Table {
         try {
             resultSet = ps.executeQuery();
         }
-        catch (Exception e) {
+        catch (SQLException e) {
             try {
                 ps.executeUpdate();
             }

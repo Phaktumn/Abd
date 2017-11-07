@@ -2,6 +2,8 @@ package com.company.DataBase;
 
 import com.company.DbConnection;
 import com.company.Table;
+import org.postgresql.util.PSQLException;
+import org.postgresql.util.PSQLState;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -43,7 +45,7 @@ public class Client extends Table {
         //ResultSet set = SendQuery("select stock from product where id = ?;", productId);
         int res = p.GetProductStock(productId);
         if(res - invoiceLines < 0){
-            throw new Exception("Stock is lower than the required amount");
+            throw new PSQLException("Low Stock", PSQLState.NUMERIC_CONSTANT_OUT_OF_RANGE);
         }
 
         PreparedStatement statement = connection.GetConnection()
@@ -57,6 +59,9 @@ public class Client extends Table {
         }
         statement.executeBatch();
 
-        p.SendQuery(p.PrepareUpdateStatement(p.Id,new String[] { p.Stock}), res - invoiceLines, productId);
+        p.SendQuery(p.PrepareUpdateStatement(p.parameters.GetParameter("id"),
+                new String[] { p.parameters.GetParameter("stock")}), res - invoiceLines, productId);
+
+        System.out.println("--Client Performed a Sell Action--");
     }
 }
