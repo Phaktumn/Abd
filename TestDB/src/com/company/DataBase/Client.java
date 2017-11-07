@@ -28,12 +28,13 @@ public class Client extends Table {
             String personName = "Person[" + name + "]";
             String location = "Portugal";
             try {
-                SendBatch(statement, i, personName, location);
+                //SendBatch(statement, i, personName, location);
+                SendQuery(statement,personName,location);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        statement.executeBatch();
+        //statement.executeBatch();
         super.Populate(entries, clearBeforePopulate);
         /* Populate(entries - 1, clearBeforePopulate); */
     }
@@ -50,14 +51,13 @@ public class Client extends Table {
 
         PreparedStatement statement = connection.GetConnection()
                 .prepareStatement("insert into invoice values(?,?);");
-        SendBatch(statement, id, clientId);
-        statement.executeBatch();
+        SendQuery(statement, clientId);
+        //statement.executeBatch();
 
         statement = connection.GetConnection().prepareStatement("insert into invoiceline values(?,?,?);");
         for (int i = 0; i < invoiceLines; i++){
-            SendBatch(statement, i,id,productId);
+            SendQuery(statement, i,id,productId);
         }
-        statement.executeBatch();
 
         p.SendQuery(p.PrepareUpdateStatement(p.parameters.GetParameter("id"),
                 new String[] { p.parameters.GetParameter("stock")}), res - invoiceLines, productId);

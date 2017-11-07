@@ -2,11 +2,14 @@ package com.company;
 
 import Utils.PreparedStatementExtension;
 import javafx.scene.control.Tab;
+import org.postgresql.util.PSQLException;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.Arrays;
+import java.util.concurrent.locks.Lock;
 
 public class Table {
 
@@ -74,18 +77,10 @@ public class Table {
             PreparedStatementExtension.Set(ps, counter, o);
             counter++;
         }
-        ResultSet resultSet = null;
-        try {
-            resultSet = ps.executeQuery();
-        }
-        catch (SQLException e) {
-            try {
-                ps.executeUpdate();
-            }
-            catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
+        ResultSet resultSet;
+
+        ps.execute();
+        resultSet = ps.getResultSet();
         return resultSet;
     }
 

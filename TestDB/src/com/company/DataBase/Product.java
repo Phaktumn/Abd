@@ -39,12 +39,12 @@ public class Product extends Table {
             int stock = min + new Random().nextInt(max - min);
 
             try {
-                SendBatch(statement, i, "This is a product", stock, min, max);
+                SendQuery(statement,  "This is a product", stock, min, max);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        statement.executeBatch();
+        //statement.executeBatch();
         super.Populate(entries, clearBeforePopulate);
     }
 

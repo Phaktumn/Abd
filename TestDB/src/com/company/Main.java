@@ -5,8 +5,12 @@ import com.company.DataBase.InvoiceLines;
 import com.company.DataBase.Product;
 import org.postgresql.util.PSQLException;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Random;
+
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 
 public class Main extends Thread {
 
@@ -19,7 +23,7 @@ public class Main extends Thread {
         DELIVERY
     }
     static Action action;
-    static final String DATABASE_NAME = "transactions";
+    static final String DATABASE_NAME = "invoices";
     static final int PORT = 5433;
     static final int DB_ENTRIES = 10;
 
@@ -28,23 +32,20 @@ public class Main extends Thread {
 
         System.out.println("Using Default settings");
         System.out.println("Database Name: " + DATABASE_NAME + " Port: " + PORT);
+        //conn.connection.setTransactionIsolation();
         try {
             conn.Connect(DATABASE_NAME, PORT);
             conn.SetAutoCommit();
+            conn.connection.setTransactionIsolation(TRANSACTION_SERIALIZABLE);
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
 
         Product product = new Product(conn, "Product");
-        try {
-            product.Populate(DB_ENTRIES, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         Client client = new Client(conn, "Client");
         try {
+            product.Populate(DB_ENTRIES, true);
             client.Populate(DB_ENTRIES, true);
         } catch (Exception e) {
             e.printStackTrace();
