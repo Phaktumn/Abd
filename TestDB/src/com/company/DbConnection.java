@@ -1,5 +1,7 @@
 package com.company;
 
+import org.postgresql.util.PSQLException;
+
 import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,9 +12,13 @@ public class DbConnection {
 
     protected Connection connection;
 
-    public boolean Connect(String databaseName, int port) throws SQLException {
+    public boolean Connect(String databaseName, int port) {
         String connectionString  = String.format("jdbc:postgresql://localhost:%s/%s", String.valueOf(port),databaseName);
-        connection = DriverManager.getConnection(connectionString);
+        try {
+            connection = DriverManager.getConnection(connectionString);
+        } catch (SQLException e) {
+            return false;
+        }
         return connection != null;
     }
 

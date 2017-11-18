@@ -2,9 +2,13 @@ package com.company.DataBase;
 
 import com.company.DbConnection;
 import com.company.Table;
+import com.company.Utilities.ColorfulConsole;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import static com.company.Utilities.ConsoleColors.AnsiColor.Green;
+import static com.company.Utilities.ConsoleColors.AnsiColor.Modifier.Bold;
 
 public class InvoiceLines extends Table {
 
@@ -22,7 +26,7 @@ public class InvoiceLines extends Table {
                 p.parameters.GetParameter("id"), p.parameters.GetParameter("id"), parameters.asArray()[2], n);
         PreparedStatement ps = connection.GetConnection().prepareStatement(format);
         //ResultSet set = SendQuery(ps);
-        System.out.println("--Listing Top 10--");
+        ColorfulConsole.WriteLine(Green(Bold),"--Listing Top 10--");
         //while (set.next()){
         //    System.out.println(set.getInt(1) + "|" + set.getString(2));
         //}

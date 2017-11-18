@@ -4,12 +4,22 @@ import com.company.DataBase.Client;
 import com.company.DataBase.InvoiceLines;
 import com.company.DataBase.Invoices;
 import com.company.DataBase.Product;
+import com.company.Utilities.ConsoleColors;
+import com.company.Utilities.ConsoleColors.AnsiColor.Modifier;
 import org.postgresql.util.PSQLException;
+import com.company.Utilities.ColorfulConsole;
+
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.Random;
 
+import static com.company.Utilities.ColorfulConsole.WriteLine;
+import static com.company.Utilities.ConsoleColors.AnsiColor.Green;
+import static com.company.Utilities.ConsoleColors.AnsiColor.Modifier.*;
+import static com.company.Utilities.ConsoleColors.AnsiColor.Red;
+import static com.company.Utilities.ConsoleColors.AnsiColor.Yellow;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 
@@ -31,42 +41,63 @@ public class Main extends Thread {
     public void run() {
         DbConnection conn = new DbConnection();
 
-        System.out.println("Using Default settings");
-        System.out.println("Database Name: " + DATABASE_NAME + " Port: " + PORT);
-        //conn.connection.setTransactionIsolation();
+        WriteLine(Green(Bold),"Using Default settings");
+        WriteLine(Green(Bold),"Database Name: " + DATABASE_NAME + " Port: " + PORT);
+        WriteLine(Green(Bold),"Connecting...");
+
+        if(!conn.Connect(DATABASE_NAME, PORT)){
+            WriteLine(Red(Bold),"[Fatal Error] Closing application");
+            return;
+        }
+
         try {
-            conn.Connect(DATABASE_NAME, PORT);
             conn.SetAutoCommit();
-            conn.connection.setTransactionIsolation(TRANSACTION_SERIALIZABLE);
+            if(conn.connection.getMetaData().supportsTransactionIsolationLevel(TRANSACTION_SERIALIZABLE))
+            {
+                WriteLine(Green(Bold),"Transaction Isolation set to: Transaction Serializable");
+                conn.connection.setTransactionIsolation(TRANSACTION_SERIALIZABLE);
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            WriteLine(Red(Bold),"[Fatal Error] Closing application");
+            return;
         }
 
 
         Product product = new Product(conn, "Product");
         Client client = new Client(conn, "Client");
-        try {
-            product.Populate(DB_ENTRIES, false);
-            client.Populate(DB_ENTRIES, false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //try {
+        //    product.Populate(DB_ENTRIES, true);
+        //    client.Populate(DB_ENTRIES, true);
+        //} catch (Exception e) {
+        //    e.printStackTrace();
+        //}
 
         InvoiceLines lines = new InvoiceLines(conn, "invoiceline");
         Invoices invoices = new Invoices(conn, "invoice");
-
-
         int counter = 0;
         int iterations = 100;
+
+        boolean rollBackState = false;
+        int cr1 = 0, pr2 = 0;
         while (true)
         {
-            action = Action.values()[new Random().nextInt(Action.values().length)];
+            if(counter >= iterations)
+                break;
             counter++;
+
+            if(!rollBackState) {
+                action = Action.values()[new Random().nextInt(Action.values().length)];
+                cr1 = 1 + new Random().nextInt(10) + client.lastInserted_ID - 10;
+                pr2 = 1 + new Random().nextInt(10) + product.lastInserted_ID - 10;
+            }
+            else {
+                WriteLine(Yellow(Bold),"Performing a retry after a rollback");
+            }
+
             try {
                 switch (action){
                     case SELL:
-                        client.Sell(new Random().nextInt(200) + 350,
-                                new Random().nextInt(100), product, lines, invoices);
+                        client.Sell(cr1, pr2, product, lines, invoices);
                         break;
                     case LIST_SOLD_ITEMS:
                         break;
@@ -80,21 +111,34 @@ public class Main extends Thread {
                 }
                 conn.Commit();
             } catch (PSQLException e) {
-                System.out.println("--Performed a Rollback action--");
-                System.out.println("\tAction   -> " + action.name().toLowerCase());
-                System.out.println("\tSqlState -> " + e.getSQLState());
-                System.out.println("\tMessage  -> " + e.getMessage());
-                e.printStackTrace();
+                WriteLine(Red(Bold),"--Performed a Rollback action--");
+                WriteLine(Red(Bold),"\tAction   -> " + action.name().toLowerCase());
+                WriteLine(Red(Bold),"\tSqlState -> " + e.getSQLState());
+                WriteLine(Red(Bold),"\tMessage  -> " + e.getMessage());
                 try {
+                    //fazer o rollback
                     conn.connection.rollback();
+                    //e Tentamos fazer a transacao de novo
+                    //Exemplo do que poderemos estar a ver
+                    //--Performed a Rollback action--
+                    //Action   -> sell
+                    //SqlState -> 40001
+                    //Message  -> ERROR: could not serialize access due to read/write dependencies among transactions
+                    //Detail: Reason code: Canceled on identification as a pivot, during write.
+                    //Hint: The transaction might succeed if retried.
+
+                    //this session is now in rollback state
+                    rollBackState = true;
+                    continue;
                 } catch (SQLException e1) {
                     e1.printStackTrace();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                continue;
             }
-            if(counter >= iterations)
-                break;
+            if(rollBackState)
+                rollBackState = false;
         }
 
         try {

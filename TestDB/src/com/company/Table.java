@@ -5,10 +5,7 @@ import com.company.DataBase.Parameters.TableParameters;
 import javafx.scene.control.Tab;
 import org.postgresql.util.PSQLException;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 
@@ -20,9 +17,11 @@ public class Table {
 
     protected int Size;
 
+    public int lastInserted_ID;
+
     public int getSize() throws Exception {
         PreparedStatement ps = connection.GetConnection().prepareStatement("select count(*) from " + name);
-        SendQuery(ps);
+        SendQuery(false, ps);
         connection.Commit();
         return Size;
     }
@@ -37,6 +36,23 @@ public class Table {
     public Table(DbConnection connection, String tableName){
         this.connection = connection;
         this.name = tableName;
+
+
+        PreparedStatement ps;
+        ResultSet set;
+
+        String query = String.format("select * from %s where ID = (select MAX(ID) from %s);", name, name);
+
+        try {
+            ps = connection.GetConnection()
+                    .prepareStatement(query);
+            set = SendQuery(false, ps);
+            set.next();
+            lastInserted_ID = set.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     /*
@@ -46,7 +62,7 @@ public class Table {
     public void ClearTable() throws Exception {
         PreparedStatement ps = connection.GetConnection()
                 .prepareStatement(String.format("delete from %s;", name));
-        SendQuery(ps);
+        SendQuery(false, ps);
         connection.Commit();
         Size = 0;
     }
@@ -78,15 +94,19 @@ public class Table {
 
         queryBuilder.deleteCharAt(queryBuilder.lastIndexOf(","));
         queryBuilder.append(");");
-        return connection.GetConnection().prepareStatement(queryBuilder.toString());
+        return connection.GetConnection().prepareStatement(queryBuilder.toString(),
+                Statement.RETURN_GENERATED_KEYS);
     }
 
     /**
      * @param args Arguments to substitute {?}
+     * @param getGeneratedKeys if get generated keys is set to true a result set
+     *                        with the generated keys will be returned instead
+     *                         of a result set with table columns info
      * @return ResultSet if the Query returns a valid value else returns NULL
      * @throws Exception
      */
-    public ResultSet SendQuery(PreparedStatement preparedStatement, Object... args) throws Exception {
+    public ResultSet SendQuery(boolean getGeneratedKeys, PreparedStatement preparedStatement, Object... args) throws Exception {
         counter = 1;
         PreparedStatement ps = preparedStatement;
         for (Object o : args){
@@ -94,9 +114,10 @@ public class Table {
             counter++;
         }
         ResultSet resultSet;
-
         ps.execute();
-        resultSet = ps.getResultSet();
+        if(getGeneratedKeys)
+            resultSet = ps.getGeneratedKeys();
+        else resultSet = ps.getResultSet();
         return resultSet;
     }
 

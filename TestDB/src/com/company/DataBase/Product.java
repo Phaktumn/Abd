@@ -27,7 +27,6 @@ public class Product extends Table {
             ClearTable();
 
         PreparedStatement statement = PrepareInsertStatement();
-        statement.closeOnCompletion();
 
         for (int i = 0; i < entries; i++)
         {
@@ -36,7 +35,9 @@ public class Product extends Table {
             int stock = min + new Random().nextInt(max - min);
 
             try {
-                SendQuery(statement, "This is a product", stock, min, max);
+                ResultSet set = SendQuery(true, statement, "This is a product", stock, min, max);
+                set.next();
+                lastInserted_ID = set.getInt(1);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -49,9 +50,10 @@ public class Product extends Table {
         String formatted = String.format("select %s from %s where %s = ?", parameters.GetParameter("stock"),
                 name,  parameters.GetParameter("id"));
         PreparedStatement statement = connection.GetConnection().prepareStatement(formatted);
-        ResultSet set = SendQuery(statement, productId);
-        set.next();
-        int i = set.getInt(1);
+        ResultSet set = SendQuery(false, statement, productId);
+        int i = 0;
+        if(set.next())
+            i = set.getInt(1);
         return i;
     }
 
@@ -61,7 +63,7 @@ public class Product extends Table {
                 .prepareStatement(String.format("select %s,%s from %s where %s = ?",
                         parameters.GetParameter("min"), parameters.GetParameter("max"),
                         name, parameters.GetParameter("id")));
-        ResultSet set = SendQuery(ps, ProductId);
+        ResultSet set = SendQuery(false, ps, ProductId);
         int x, y;
         set.first();
         x = set.getInt(1);
