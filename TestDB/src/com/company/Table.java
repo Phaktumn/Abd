@@ -37,22 +37,19 @@ public class Table {
         this.connection = connection;
         this.name = tableName;
 
-
         PreparedStatement ps;
         ResultSet set;
 
         String query = String.format("select * from %s where ID = (select MAX(ID) from %s);", name, name);
 
         try {
-            ps = connection.GetConnection()
-                    .prepareStatement(query);
+            ps = connection.GetConnection().prepareStatement(query);
             set = SendQuery(false, ps);
-            set.next();
-            lastInserted_ID = set.getInt(1);
+            if(set.next())
+                lastInserted_ID = set.getInt(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     /*

@@ -26,7 +26,7 @@ public class InvoiceLines extends Table {
                 p.parameters.GetParameter("id"), p.parameters.GetParameter("id"), parameters.asArray()[2], n);
         PreparedStatement ps = connection.GetConnection().prepareStatement(format);
         //ResultSet set = SendQuery(ps);
-        ColorfulConsole.WriteLine(Green(Bold),"--Listing Top 10--");
+        //ColorfulConsole.WriteLine(Green(Bold),"--Listing Top 10--");
         //while (set.next()){
         //    System.out.println(set.getInt(1) + "|" + set.getString(2));
         //}

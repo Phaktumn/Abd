@@ -16,15 +16,12 @@ import java.sql.Savepoint;
 import java.util.Random;
 
 import static com.company.Utilities.ColorfulConsole.WriteLine;
-import static com.company.Utilities.ConsoleColors.AnsiColor.Green;
+import static com.company.Utilities.ConsoleColors.AnsiColor.*;
 import static com.company.Utilities.ConsoleColors.AnsiColor.Modifier.*;
-import static com.company.Utilities.ConsoleColors.AnsiColor.Red;
-import static com.company.Utilities.ConsoleColors.AnsiColor.Yellow;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 
 public class Main extends Thread {
-
 
     public enum Action{
         SELL,
@@ -37,6 +34,9 @@ public class Main extends Thread {
     static final String DATABASE_NAME = "transactions";
     static final int PORT = 5433;
     static final int DB_ENTRIES = 10;
+
+    static int rollback_Count = 0;
+    static int success_Count = 0;
 
     public void run() {
         DbConnection conn = new DbConnection();
@@ -90,9 +90,6 @@ public class Main extends Thread {
                 cr1 = 1 + new Random().nextInt(10) + client.lastInserted_ID - 10;
                 pr2 = 1 + new Random().nextInt(10) + product.lastInserted_ID - 10;
             }
-            else {
-                WriteLine(Yellow(Bold),"Performing a retry after a rollback");
-            }
 
             try {
                 switch (action){
@@ -111,10 +108,6 @@ public class Main extends Thread {
                 }
                 conn.Commit();
             } catch (PSQLException e) {
-                WriteLine(Red(Bold),"--Performed a Rollback action--");
-                WriteLine(Red(Bold),"\tAction   -> " + action.name().toLowerCase());
-                WriteLine(Red(Bold),"\tSqlState -> " + e.getSQLState());
-                WriteLine(Red(Bold),"\tMessage  -> " + e.getMessage());
                 try {
                     //fazer o rollback
                     conn.connection.rollback();
@@ -129,14 +122,15 @@ public class Main extends Thread {
 
                     //this session is now in rollback state
                     rollBackState = true;
+                    rollback_Count++;
                     continue;
                 } catch (SQLException e1) {
                     e1.printStackTrace();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                continue;
             }
+            success_Count++;
             if(rollBackState)
                 rollBackState = false;
         }
@@ -150,9 +144,19 @@ public class Main extends Thread {
 
     public static void main(String[] args) throws Exception {
 
-        for (int i = 0; i < 1  ; i++) {
+        for (int i = 0; i < 16; i++) {
             new Main().start();
         }
+
+        Thread.sleep(2000);
+
+        ColorfulConsole.WriteLine(Green(Underline),"2 threads running");
+
+        String fs = String.format("Rollbacks -> {0}%d\n{1}Succeed -> {2}%d", rollback_Count, success_Count);
+        ColorfulConsole.WriteLineFormatted(fs, Red(Bold), White(Regular),Green(Bold));
+
+        float f = (float)rollback_Count / (float)success_Count;
+        ColorfulConsole.WriteLine(White(Regular), "Ratio -> " + f + " Rollbacks per Succeed Transaction");
 
         // if(args.length != 0){
          //   conn.Connect(args[0], Integer.parseInt(args[1]));

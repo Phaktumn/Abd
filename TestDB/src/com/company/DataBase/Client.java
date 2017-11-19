@@ -7,6 +7,7 @@ import com.company.Utilities.ColorfulConsole;
 import org.postgresql.util.PSQLException;
 import org.postgresql.util.PSQLState;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ import static com.company.Utilities.ConsoleColors.AnsiColor.Green;
 import static com.company.Utilities.ConsoleColors.AnsiColor.Modifier.Bold;
 import static com.company.Utilities.ConsoleColors.AnsiColor.Red;
 import static com.company.Utilities.ConsoleColors.AnsiColor.Yellow;
+import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 
 public class Client extends Table {
 
@@ -65,7 +67,7 @@ public class Client extends Table {
             String resString = String.format("We are low on stock" +
                     "\n\tRequired->%d" +
                     "\n\tAvailable->%d", invoiceLines, res);
-            ColorfulConsole.WriteLine(Red(Bold),resString);
+            ColorfulConsole.WriteLine(Red(Bold), resString);
             return;
         }
 
@@ -82,7 +84,5 @@ public class Client extends Table {
 
         p.SendQuery(false, p.PrepareUpdateStatement(p.parameters.GetParameter("id"),
                 new String[] { p.parameters.GetParameter("stock")}), res - invoiceLines, productId);
-
-        ColorfulConsole.WriteLine(Green(Bold),"--Client Performed a Sell Action--");
     }
 }
