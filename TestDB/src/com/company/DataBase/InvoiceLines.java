@@ -2,13 +2,8 @@ package com.company.DataBase;
 
 import com.company.DbConnection;
 import com.company.Table;
-import com.company.Utilities.ColorfulConsole;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
-import static com.company.Utilities.ConsoleColors.AnsiColor.Green;
-import static com.company.Utilities.ConsoleColors.AnsiColor.Modifier.Bold;
 
 public class InvoiceLines extends Table {
 

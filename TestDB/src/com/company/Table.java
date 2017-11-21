@@ -2,12 +2,8 @@ package com.company;
 
 import Utils.PreparedStatementExtension;
 import com.company.DataBase.Parameters.TableParameters;
-import javafx.scene.control.Tab;
-import org.postgresql.util.PSQLException;
 
 import java.sql.*;
-import java.util.Arrays;
-import java.util.concurrent.locks.Lock;
 
 public class Table {
 

@@ -1,8 +1,5 @@
 package com.company;
 
-import org.postgresql.util.PSQLException;
-
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

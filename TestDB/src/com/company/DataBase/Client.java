@@ -1,23 +1,16 @@
 package com.company.DataBase;
 
+import com.company.Table;
 import com.company.DataBase.Parameters.TableParameters;
 import com.company.DbConnection;
-import com.company.Table;
 import com.company.Utilities.ColorfulConsole;
-import org.postgresql.util.PSQLException;
-import org.postgresql.util.PSQLState;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Random;
 
-import static com.company.Utilities.ConsoleColors.AnsiColor.Green;
 import static com.company.Utilities.ConsoleColors.AnsiColor.Modifier.Bold;
 import static com.company.Utilities.ConsoleColors.AnsiColor.Red;
-import static com.company.Utilities.ConsoleColors.AnsiColor.Yellow;
-import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 
 public class Client extends Table {
 
@@ -44,7 +37,6 @@ public class Client extends Table {
             String personName = "Person[" + name + "]";
             String location = "Portugal";
             try {
-                //SendBatch(statement, i, personName, location);
                 ResultSet set = SendQuery(true, statement, personName,location);
                 set.next();
                 lastInserted_ID = set.getInt(1);
@@ -52,13 +44,11 @@ public class Client extends Table {
                 e.printStackTrace();
             }
         }
-        //statement.executeBatch();
         super.Populate(entries, clearBeforePopulate);
-        /* Populate(entries - 1, clearBeforePopulate); */
     }
 
     public void Sell(int clientId,  int productId, Product p, InvoiceLines lines, Invoices invoices) throws Exception {
-        int id = new Random().nextInt(10000);
+        //int id = new Random().nextInt(10000);
         int invoiceLines = 5 + new Random().nextInt(15);
 
         //ResultSet set = SendQuery("select stock from product where id = ?;", productId);

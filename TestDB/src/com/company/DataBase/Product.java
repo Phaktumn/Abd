@@ -1,6 +1,5 @@
 package com.company.DataBase;
 
-import com.company.DataBase.Parameters.TableParameters;
 import com.company.DbConnection;
 import com.company.Table;
 

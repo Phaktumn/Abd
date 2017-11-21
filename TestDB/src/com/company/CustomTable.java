@@ -1,7 +1,6 @@
 package com.company;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Random;
 
 public class CustomTable extends Table
